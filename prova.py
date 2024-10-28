@@ -26,6 +26,7 @@ def read_json_and_write_csv(input_directory, output_directory):
                     atoms = compound["coords"][0]
                     x = atoms["conformers"][0]["x"]
                     y = atoms["conformers"][0]["y"]
+                    print(filename)
                     z = atoms["conformers"][0]["z"]
                     atomic_numbers = extract_atomic_numbers(compound)
 

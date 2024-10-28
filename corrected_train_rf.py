@@ -4,27 +4,27 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+import matplotlib.pyplot as plt  # Importamos matplotlib para visualizar
 
 def load_data(file_path):
     df = pd.read_csv(file_path)
     return df
 
 def preprocess_data(df, columns_to_drop):
-    df_cleaned = df.drop(columns=columns_to_drop)
+    df_cleaned = df.drop(columns=columns_to_drop).fillna(0)  # Replace NA with 0
     return df_cleaned
 
 def train_evaluate_model(X_train, y_train, X_test, y_test):
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-
     model = RandomForestRegressor()
 
     param_grid = {
-        'n_estimators': [300,500,1000],
-        'max_depth': [5, 10, 20, 30],
+        'n_estimators': [500, 1000],
+        'max_depth': [10, 20, 30],
         'min_samples_split': [3, 5, 10],
-        'max_features':['sqrt']
+        'max_features': ['sqrt']
     }
 
     grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, n_jobs=-1)
@@ -47,17 +47,28 @@ def train_evaluate_model(X_train, y_train, X_test, y_test):
     re_percentage = np.mean(absolute_percentage_errors)
     re_std = np.std(absolute_percentage_errors)
 
+    # Plot predictions and ground truth vs index
+    plt.figure(figsize=(12, 6))
+    sample_indices = range(len(y_test))
+    plt.plot(sample_indices, y_test, 'o-', color='blue', label='Ground Truth', markersize=4)
+    plt.plot(sample_indices, predictions, 'o-', color='orange', label='Predictions', markersize=4, alpha=0.7)
+    
+    plt.xlabel("Sample Index")
+    plt.ylabel("Energy")
+    plt.title("Predictions vs Ground Truth for Energy")
+    plt.legend()
+    plt.show()
+
     return re_percentage, re_std
 
-file_path = r"C:\Users\lclai\Desktop\datasets_corrected\training\pubchem_gse.csv"
-
+# Paths and data loading
+file_path = r"C:\Users\lclai\Desktop\datasets_corrected\training\combined.csv"
 columns_to_drop = ['id', 'mf']  
 target_column = 'energy'  
 
 data = load_data(file_path)
 y = data[target_column]
 data_cleaned = preprocess_data(data, columns_to_drop)
-
 X = data_cleaned.drop(columns=[target_column])
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
