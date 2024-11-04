@@ -5,6 +5,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 import matplotlib.pyplot as plt
+import shap
 
 def load_data(file_path):
     df = pd.read_csv(file_path)
@@ -22,11 +23,11 @@ def train_evaluate_model(X_train, y_train, X_test, y_test):
     model = XGBRegressor()
 
     param_grid = {
-        'n_estimators': [500, 1000],
-        'max_depth': [10, 20, 30],
-        'min_child_weight': [1, 5],
-        'learning_rate': [0.1, 0.2],
-        'subsample': [0.6, 1.0]
+        'n_estimators': [1000],
+        'max_depth': [20],
+        'min_child_weight': [1],
+        'learning_rate': [0.1],
+        'subsample': [0.6]
     }
 
     grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, n_jobs=-1)
@@ -61,9 +62,13 @@ def train_evaluate_model(X_train, y_train, X_test, y_test):
     plt.legend()
     plt.show()
 
+    explainer = shap.Explainer(grid_search.best_estimator_, feature_names=X_train.columns)
+    shap_values = explainer(X_test_scaled)
+    shap.summary_plot(shap_values, X_test_scaled, feature_names=X_train.columns, max_display=5)
+
     return re_percentage, re_std
 
-file_path = r"C:\Users\lclai\Desktop\datasets_corrected\training\combined.csv"
+file_path = r"C:\Users\lclai\Desktop\datasets_corrected\training\pubchem.csv"
 
 columns_to_drop = ['id', 'mf']  
 target_column = 'energy'  
@@ -81,3 +86,4 @@ re_percentage, re_std = train_evaluate_model(X_train, y_train, X_test, y_test)
 if re_percentage is not None:
     print(f"Relative Error (RE%): {abs(re_percentage):.2f}%")
     print(f"Standard Deviation of RE%: {re_std:.2f}%")
+
